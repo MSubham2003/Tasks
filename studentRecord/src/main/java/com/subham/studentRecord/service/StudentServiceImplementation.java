@@ -16,22 +16,23 @@ import java.util.Optional;
 @Slf4j
 @Service
 public class StudentServiceImplementation implements StudentService {
-    @Autowired
-    private StudentRepository studentRepository;
-
-    @Autowired
-    private PojoValidator validator;
-
-    @Autowired
-    private StudentMapper studentMapper;
+    private final StudentRepository studentRepository;
+    private final PojoValidator validator;
+    private final StudentMapper studentMapper;
 
     private static final String SUCCESS_STATUS = "SUCCESS";
 
+    public StudentServiceImplementation(StudentRepository studentRepository, PojoValidator validator, StudentMapper studentMapper) {
+        this.studentRepository = studentRepository;
+        this.validator = validator;
+        this.studentMapper = studentMapper;
+    }
+
     @Override
-    public Response registerNewStudent(StudentDto studentDto) throws StudentException {
+    public Response registerNewStudent(StudentDto studentDto) {
+        validator.validate(studentDto);
         Student student = studentMapper.toEntity(studentDto);
-        validator.validate(student);
-        Optional<Student> dbRes = studentRepository.findIfEmailExist(student.getEmail());
+        Optional<Student> dbRes = studentRepository.findByEmail(student.getEmail());
         log.info("Data received from db for unique email check {}", dbRes);
         if (dbRes.isPresent()) {
             log.info("Email is already present in db. Student registered with email {}", dbRes);
@@ -41,7 +42,7 @@ public class StudentServiceImplementation implements StudentService {
         log.info("Student registered with name: {}", student.getName());
         Response res = new Response();
         res.setStatus(SUCCESS_STATUS);
-        res.setData(studentDto);
+        res.setData(student);
         return res;
     }
 
@@ -50,12 +51,13 @@ public class StudentServiceImplementation implements StudentService {
         Response res = new Response();
         res.setStatus(SUCCESS_STATUS);
         List<Student> students = studentRepository.findAll();
-        res.setData(students);
+        List<StudentDto> studentDtoList = students.stream().map(studentMapper::toDTO).toList();
+        res.setData(studentDtoList);
         return res;
     }
 
     @Override
-    public Response getStudentById(Long id) throws StudentException {
+    public Response getStudentById(Long id) {
         Response res = new Response();
         res.setStatus(SUCCESS_STATUS);
         Optional<Student> student = studentRepository.findById(id);
@@ -68,7 +70,7 @@ public class StudentServiceImplementation implements StudentService {
     }
 
     @Override
-    public Response updateStudentDetail(Long id, StudentDto studentDto) throws StudentException {
+    public Response updateStudentDetail(Long id, StudentDto studentDto) {
         Student student = studentMapper.toEntity(studentDto);
         Response res = new Response();
         res.setStatus(SUCCESS_STATUS);
@@ -91,7 +93,7 @@ public class StudentServiceImplementation implements StudentService {
     }
 
     @Override
-    public void deleteStudentById(Long id) throws StudentException {
+    public void deleteStudentById(Long id) {
         Optional<Student> studentData = studentRepository.findById(id);
         if (studentData.isEmpty())
             throw new StudentException(HttpStatusCode.valueOf(404), "Student not found with id " + id);
@@ -103,7 +105,7 @@ public class StudentServiceImplementation implements StudentService {
     public Response fetchStudentByDepartment(String department) {
         Response res = new Response();
         res.setStatus(SUCCESS_STATUS);
-        List<Student> studentData = studentRepository.findStudentsByDepartment(department);
+        List<Student> studentData = studentRepository.findByDepartment(department);
         List<StudentDto> studentDtoList = studentData.stream().map(studentMapper::toDTO).toList();
         res.setData(studentDtoList);
         return res;

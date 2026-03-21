@@ -14,11 +14,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({StudentException.class})
     public ResponseEntity<Response> handleRunTimeException(StudentException ex){
-        log.info("Student Exception: {}", ex.getERROR_MESSAGE());
+        log.info("Student Exception: {}", ex.getErrorMessage());
         Response res = new Response();
         res.setStatus(STATUS);
-        res.setErrMessage(ex.getERROR_MESSAGE());
-        HttpStatusCode httpStatusCode = ex.getHTTP_STATUS_CODE();
+        res.setErrMessage(ex.getErrorMessage());
+        HttpStatusCode httpStatusCode = ex.getHttpStatusCode();
         log.info("Response Returned: {}", res);
         return ResponseEntity.status(httpStatusCode).body(res);
     }

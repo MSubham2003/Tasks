@@ -2,7 +2,6 @@ package com.subham.studentRecord.service;
 
 import com.subham.studentRecord.exception.StudentException;
 import jakarta.validation.ConstraintViolation;
-import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
